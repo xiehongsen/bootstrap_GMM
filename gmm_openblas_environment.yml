@@ -1,0 +1,14 @@
+name: gmm_openblas
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.11
+  - numpy
+  - scipy
+  - pandas
+  - matplotlib
+  - scikit-learn
+  - joblib
+  - openpyxl
+  - libblas=*=*openblas
