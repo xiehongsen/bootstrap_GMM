@@ -1,4 +1,22 @@
-# bootstrap_GMM
+# Bootstrap GMM Analysis of Detrital Geochronologic Age Distributions
+
+This repository contains Python code for identifying and evaluating major
+age components in geochronologic datasets using bootstrap Gaussian mixture
+modeling (GMM).
+
+The workflow was developed for analysis of compiled zircon U–Pb and
+Ar-system geochronologic age distributions from the Yangtze River
+catchment. However, the code can be applied to other detrital or bedrock
+geochronologic datasets with compatible input formats.
+
+Gaussian mixture models are fitted using `scikit-learn`. The number of
+mixture components is evaluated using the Bayesian information criterion
+(BIC), and bootstrap resampling is used to assess the recurrence and
+stability of inferred age components.
+
+The computational workflow supports parallel bootstrap calculations using
+`joblib` while restricting low-level BLAS libraries to a single thread per
+worker to avoid nested parallelism.
 
 ```py
 conda env create -f gmm_openblas_environment.yml
