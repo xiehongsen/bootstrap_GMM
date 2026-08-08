@@ -19,7 +19,7 @@ The computational workflow supports parallel bootstrap calculations using
 worker to avoid nested parallelism.
 ## Main files
 
-- `bootstrap_gmm_analysis.py`  
+- `bootstrap_gmm.py`  
   Core Python implementation of the bootstrap GMM analysis.
 
 - `run_bootstrap_gmm.ipynb`  
