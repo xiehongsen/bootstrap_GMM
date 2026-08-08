@@ -17,12 +17,22 @@ stability of inferred age components.
 The computational workflow supports parallel bootstrap calculations using
 `joblib` while restricting low-level BLAS libraries to a single thread per
 worker to avoid nested parallelism.
+
 ## Main files
 
 - `bootstrap_gmm.py`  
   Core Python implementation of the bootstrap GMM analysis.
 - `environment.yml`  
   Conda environment required to reproduce the analysis.
+
+## Installation
+
+Create the supplied Conda environment:
+
+```bash
+conda env create -f environment.yml
+conda activate gmm_openblas
+
 
 ```py
 conda env create -f gmm_openblas_environment.yml
