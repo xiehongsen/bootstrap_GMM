@@ -1,18 +1,16 @@
 # Bootstrap GMM Analysis of Geochronologic Age Distributions
 
-This repository contains the Python workflow used for bootstrap Gaussian mixture modeling (GMM) of geochronologic age distributions in the associated study.
+This repository contains the Python workflow used for bootstrap Gaussian mixture modeling (GMM) of geochronologic age distributions in our study.
 
 The workflow combines Gaussian mixture modeling, Bayesian information criterion (BIC) model selection, and bootstrap resampling to identify stable age components in geochronologic datasets.
 
 ## Files
 
-The repository contains three files:
-
 - `bootstrap_GMM.py`  
-  Main Python script for Gaussian mixture modeling, bootstrap resampling, stable peak identification, and figure generation.
+  Main Python script for GMM fitting, BIC model selection, bootstrap resampling, stable peak identification, and figure generation.
 
 - `bootstrap_GMM.ipynb`  
-  Jupyter Notebook used to configure the analysis and run `bootstrap_GMM.py`.
+  Jupyter Notebook used to configure and run `bootstrap_GMM.py`.
 
 - `gmm_openblas_environment.yml`  
   Conda environment used for the analysis.
@@ -21,73 +19,44 @@ The repository contains three files:
 
 Positive ages are transformed to log10(age) before Gaussian mixture modeling.
 
-For each age dataset, Gaussian mixture models containing 1–10 components are evaluated, and the preferred model is selected using the Bayesian information criterion (BIC).
+For each bootstrap replicate, Gaussian mixture models containing 1–10 components are fitted, and the preferred number of components is selected using the Bayesian information criterion (BIC).
 
-Bootstrap resampling is then performed by sampling the observed ages with replacement. A new BIC-selected GMM is fitted independently to each bootstrap replicate.
+Bootstrap resampling is performed by sampling the observed ages with replacement. The bootstrap sample size is equal to the original sample size.
 
-Gaussian components identified in different bootstrap replicates are grouped when their peak ages differ by no more than 10%. A component is retained as a stable age peak when it occurs in at least 60% of the bootstrap replicates.
+Gaussian components identified among different bootstrap replicates are grouped when their peak ages differ by no more than 10%. A peak is retained as a stable component when it occurs in at least 60% of the bootstrap replicates.
 
-The reported 95% bootstrap age range corresponds to the 2.5th–97.5th percentile range of component ages within each stable peak cluster.
+For each stable peak, the workflow reports the representative peak age, bootstrap support, component weight, and the 2.5th–97.5th percentile range of bootstrap peak ages.
 
-The current implementation resamples the observed ages only; analytical age uncertainties are not propagated during bootstrap resampling.
+The current analysis resamples the observed ages only; analytical age uncertainties are not propagated during bootstrap resampling.
 
-## Input data
+## Default settings
 
-The input Excel file must contain at least the following columns:
+The principal settings used in the analysis are:
+
+```text
+Number of bootstrap replicates: 5000
+Minimum number of GMM components: 1
+Maximum number of GMM components: 10
+GMM initializations (n_init): 10
+Peak merge tolerance: 10%
+Minimum bootstrap support: 60%
+Random seed: 42
+```
+
+Bootstrap calculations are parallelized using `joblib` with the `loky` backend. Each worker is restricted to one BLAS/OpenMP thread to avoid nested parallelism.
+
+## Input
+
+The analysis requires an Excel file containing at least:
 
 ```text
 Sample_ID
 BestAge
 ```
 
-`Sample_ID` identifies individual age datasets, and `BestAge` contains the ages used for GMM analysis.
+Only finite and positive `BestAge` values are used in the analysis.
 
-The Excel file may contain one or multiple datasets distinguished by different `Sample_ID` values.
-
-Users should specify their own input file, output directory, and `Sample_ID` values in `bootstrap_GMM.ipynb`.
-
-## Number of datasets
-
-The statistical core of the workflow operates on one age dataset at a time and is not intrinsically restricted to two datasets.
-
-The supplied `bootstrap_GMM.py` and `bootstrap_GMM.ipynb` are configured to analyze and plot two datasets in each run because this configuration was used in the associated study.
-
-For a single dataset, the bootstrap GMM procedure can be applied only to the selected `Sample_ID`, and the second-dataset calculation and plotting steps can be omitted.
-
-For multiple datasets, the same procedure can be applied independently to each `Sample_ID`. For example:
-
-```python
-sample_ids = [
-    "Sample-1",
-    "Sample-2",
-    "Sample-3"
-]
-```
-
-The core analysis can then be repeated for each dataset using `find_stable_gmm_peaks()`.
-
-For example:
-
-```python
-for sample_id in sample_ids:
-    ages = get_sample_ages(df, sample_id)
-
-    peaks = find_stable_gmm_peaks(
-        ages=ages,
-        sample_name=sample_id,
-        n_bootstrap=N_BOOTSTRAP,
-        k_min=K_MIN,
-        k_max=K_MAX,
-        merge_distance_log=MERGE_DISTANCE_LOG,
-        min_support=MIN_SUPPORT,
-        max_bootstrap_n=MAX_BOOTSTRAP_N,
-        n_init=GMM_N_INIT,
-        random_seed=RANDOM_SEED,
-        n_jobs=N_JOBS
-    )
-```
-
-Thus, one, two, or multiple age datasets can be analyzed using the same bootstrap GMM procedure. The plotting and output sections can be adapted according to the number of datasets being analyzed.
+Input paths, output paths, sample IDs, and computational settings can be specified in `bootstrap_GMM.ipynb`.
 
 ## Installation
 
@@ -115,13 +84,13 @@ Verify the required Python packages:
 python -c "import numpy, pandas, sklearn, joblib, matplotlib, openpyxl; print('All packages OK')"
 ```
 
-Verify `GaussianMixture`:
+Verify the Gaussian mixture model implementation:
 
 ```bash
 python -c "from sklearn.mixture import GaussianMixture; print('GaussianMixture OK')"
 ```
 
-If necessary, install Jupyter:
+Install Jupyter support if required:
 
 ```bash
 conda install -c conda-forge jupyterlab notebook ipykernel -y
@@ -152,20 +121,9 @@ Python (gmm_openblas)
 
 as the Jupyter kernel.
 
-In the user-configuration section of the notebook, specify:
+Specify the required file paths, sample IDs, output name, and computational parameters in the configuration section of the notebook.
 
-- the path to `bootstrap_GMM.py`;
-- the input Excel file;
-- the output directory;
-- the `Sample_ID` value(s) to be analyzed;
-- the output filename;
-- the number of bootstrap replicates;
-- the number of parallel workers;
-- the number of GMM initializations.
-
-The supplied notebook is configured for two datasets per run. The underlying bootstrap GMM functions can also be applied to a single dataset or repeated for multiple datasets.
-
-The principal computational parameters used in the associated study are:
+The main computational parameters are:
 
 ```python
 n_bootstrap = 5000
@@ -173,36 +131,31 @@ n_jobs = 8
 gmm_n_init = 10
 ```
 
-The number of parallel workers (`n_jobs`) can be adjusted according to the available computational resources.
+`n_jobs` can be adjusted according to the available CPU resources.
 
-For a quick test before the full calculation, a smaller number of bootstrap replicates can be used, for example:
+Run the notebook cells sequentially to execute `bootstrap_GMM.py`.
 
-```python
-n_bootstrap = 50
-n_jobs = 2
-gmm_n_init = 3
-```
+## Stable peak identification
 
-## Default analysis settings
+Candidate GMM components from all bootstrap replicates are grouped in log-age space using a maximum relative peak-age difference of 10%.
 
-The principal settings in `bootstrap_GMM.py` are:
+For each resulting peak cluster, bootstrap support is calculated as:
 
 ```text
-GMM component range:       1–10
-Bootstrap replicates:      5000
-Peak merge tolerance:      10%
-Minimum bootstrap support: 60%
-GMM n_init:                10
-Random seed:               42
+number of bootstrap replicates containing the peak
+--------------------------------------------------
+total number of bootstrap replicates
 ```
 
-Bootstrap calculations are parallelized using `joblib`.
+Only peaks with bootstrap support ≥60% are retained as stable peaks.
 
-Each parallel worker is restricted to one BLAS/OpenMP thread to avoid nested parallelism and CPU oversubscription.
+The representative age of each stable peak is calculated from the grouped component positions in log-age space using the component weights.
+
+The reported 95% bootstrap range corresponds to the 2.5th and 97.5th percentiles of the component ages assigned to each stable peak.
 
 ## Output
 
-The analysis exports stable GMM peak statistics as:
+Stable GMM peak statistics are exported as:
 
 ```text
 *_GMM_bootstrap_peaks.csv
@@ -211,16 +164,24 @@ The analysis exports stable GMM peak statistics as:
 
 The output table includes:
 
-- stable peak age;
-- 95% bootstrap age range;
-- bootstrap support;
-- mean and median component weights;
-- Gaussian width in log10(age) space;
-- median number of GMM components selected by BIC;
-- number of bootstrap replicates supporting each peak;
-- ECDF position of each peak.
+```text
+Sample_ID
+Peak_rank_by_age
+Peak_age_Ma
+CI95_low_Ma
+CI95_high_Ma
+Bootstrap_support
+Mean_component_weight
+Median_component_weight
+Mean_sigma_log10_age
+Median_selected_K
+Score
+N_boot_support
+N_candidates_in_cluster
+ECDF_y
+```
 
-The script also generates empirical cumulative distribution function (ECDF) plots with the identified stable GMM peaks.
+The workflow also plots empirical cumulative distribution functions (ECDFs) together with the identified stable GMM peaks.
 
 Figures are exported as:
 
@@ -230,15 +191,17 @@ Figures are exported as:
 *.svg
 ```
 
+with PNG output at 1200 dpi.
+
 ## Notes
 
-The bootstrap procedure resamples observed ages with replacement.
-
-Individual analytical age uncertainties are not propagated in the current implementation.
-
-The 95% range reported for each stable peak therefore represents variation in the fitted peak position among bootstrap resamples rather than analytical uncertainty on individual ages.
-
-Stable GMM components represent statistically recurrent features of the age distribution. Geological interpretation of these components should be based on independent geological and geochronological constraints.
+- GMM fitting is performed in log10(age) space.
+- The number of Gaussian components is selected independently for each bootstrap replicate using BIC.
+- Bootstrap resampling is performed on the observed ages with replacement.
+- Analytical age uncertainties are not propagated.
+- The number of stable peaks is not fixed in advance.
+- Only peaks reaching the minimum bootstrap-support threshold are retained.
+- Parallel calculations use independent processes with one BLAS/OpenMP thread per worker.
 
 ## References
 
