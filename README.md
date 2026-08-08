@@ -1,5 +1,6 @@
 # bootstrap_GMM
 
+```py
 conda env create -f gmm_openblas_environment.yml
 
 conda activate gmm_openblas
@@ -45,43 +46,50 @@ import os
 import sys
 import subprocess
 from pathlib import Path
-
+```
 
 # 1. 用户设置区：以后只修改这里
 
-## 修改后的 Python 脚本
+- 修改后的 Python 脚本
+```py
 script_path = Path(
     "/media/tigerwp/data/Xiehongsen/Illustrate of Yangtze data/"
     "bootstrap GMM/Supplemental_bootstrap_GMM_Jupyter_configurable.py"
 )
+```
 
-## 输入 Excel 文件
+- 输入 Excel 文件
+```py
 excel_path = Path(
     "/media/tigerwp/data/Xiehongsen/Illustrate of Yangtze data/"
     "baserock python data.xlsx"
 )
-
-## 输出文件夹
+```
+- 输出文件夹
+```py
 output_dir = Path(
     "/media/tigerwp/data/Xiehongsen/Illustrate of Yangtze data/"
     "bootstrap GMM/Jinsha_results/"
 )
-
-## Excel中两个样品的 Sample_ID
+```
+- Excel中两个样品的 Sample_ID
+```py
 sample_a = "Zr-Jinsha"
 sample_b = "Ar-Jinsha"
-
-## 输出文件名前缀，不要加 .png 或 .xlsx 后缀
+```
+- 输出文件名前缀，不要加 .png 或 .xlsx 后缀
+```py
 output_name = "Jinsha-GMM"
-
-## 计算参数
+```
+- 计算参数
+```py
 n_bootstrap = 1000
 n_jobs = 8
 gmm_n_init = 3
-
+```
 
 # 2. 文件与参数检查
-
+```py
 if not script_path.is_file():
     raise FileNotFoundError(f"找不到 Python 脚本：\n{script_path}")
 
@@ -107,38 +115,42 @@ if gmm_n_init < 1:
     raise ValueError("gmm_n_init 必须大于 0")
 
 output_dir.mkdir(parents=True, exist_ok=True)
-
+```
 
 # 3. 将设置传递给 Python 脚本
-
+```py
 env = os.environ.copy()
-
-## 路径、样品名和输出名称
+```
+- 路径、样品名和输出名称
+```py
 env["GMM_EXCEL_PATH"] = str(excel_path)
 env["GMM_OUT_DIR"] = str(output_dir)
 env["GMM_SAMPLE_A"] = sample_a.strip()
 env["GMM_SAMPLE_B"] = sample_b.strip()
 env["GMM_FNAME"] = output_name.strip()
-
-## bootstrap 和并行设置
+```
+- bootstrap 和并行设置
+```py
 env["GMM_N_BOOTSTRAP"] = str(n_bootstrap)
 env["GMM_N_JOBS"] = str(n_jobs)
 env["GMM_N_INIT"] = str(gmm_n_init)
-
-## 每个并行进程内部只使用一个底层计算线程
+```
+- 每个并行进程内部只使用一个底层计算线程
+```py
 env["OMP_NUM_THREADS"] = "1"
 env["MKL_NUM_THREADS"] = "1"
 env["OPENBLAS_NUM_THREADS"] = "1"
 env["NUMEXPR_NUM_THREADS"] = "1"
 env["VECLIB_MAXIMUM_THREADS"] = "1"
 env["BLIS_NUM_THREADS"] = "1"
-
-## 防止服务器上图形窗口阻塞
+```
+- 防止服务器上图形窗口阻塞
+```py
 env["MPLBACKEND"] = "Agg"
-
+```
 
 # 4. 显示本次运行设置
-
+```py
 print("本次运行设置")
 print("-" * 60)
 print("Python：", sys.executable)
@@ -152,10 +164,10 @@ print("Bootstrap：", n_bootstrap)
 print("并行进程：", n_jobs)
 print("GMM n_init：", gmm_n_init)
 print("-" * 60)
-
+```
 
 # 5. 运行完整脚本
-
+```py
 result = subprocess.run(
     [sys.executable, str(script_path)],
     env=env,
@@ -170,6 +182,6 @@ if result.returncode == 0:
     print("结果保存在：", output_dir)
 else:
     print("程序运行失败，请查看上方报错信息。")
-
+```
 
 
