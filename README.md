@@ -21,11 +21,6 @@ worker to avoid nested parallelism.
 
 - `bootstrap_gmm.py`  
   Core Python implementation of the bootstrap GMM analysis.
-
-- `run_bootstrap_gmm.ipynb`  
-  Jupyter Notebook interface for defining datasets, paths, and computational
-  parameters and launching the analysis.
-
 - `environment.yml`  
   Conda environment required to reproduce the analysis.
 
