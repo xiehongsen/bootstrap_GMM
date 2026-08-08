@@ -47,44 +47,40 @@ import subprocess
 from pathlib import Path
 
 
-# ============================================================
 # 1. 用户设置区：以后只修改这里
-# ============================================================
 
-# 修改后的 Python 脚本
+## 修改后的 Python 脚本
 script_path = Path(
     "/media/tigerwp/data/Xiehongsen/Illustrate of Yangtze data/"
     "bootstrap GMM/Supplemental_bootstrap_GMM_Jupyter_configurable.py"
 )
 
-# 输入 Excel 文件
+## 输入 Excel 文件
 excel_path = Path(
     "/media/tigerwp/data/Xiehongsen/Illustrate of Yangtze data/"
     "baserock python data.xlsx"
 )
 
-# 输出文件夹
+## 输出文件夹
 output_dir = Path(
     "/media/tigerwp/data/Xiehongsen/Illustrate of Yangtze data/"
     "bootstrap GMM/Jinsha_results/"
 )
 
-# Excel中两个样品的 Sample_ID
+## Excel中两个样品的 Sample_ID
 sample_a = "Zr-Jinsha"
 sample_b = "Ar-Jinsha"
 
-# 输出文件名前缀，不要加 .png 或 .xlsx 后缀
+## 输出文件名前缀，不要加 .png 或 .xlsx 后缀
 output_name = "Jinsha-GMM"
 
-# 计算参数
+## 计算参数
 n_bootstrap = 1000
 n_jobs = 8
 gmm_n_init = 3
 
 
-# ============================================================
 # 2. 文件与参数检查
-# ============================================================
 
 if not script_path.is_file():
     raise FileNotFoundError(f"找不到 Python 脚本：\n{script_path}")
@@ -113,25 +109,23 @@ if gmm_n_init < 1:
 output_dir.mkdir(parents=True, exist_ok=True)
 
 
-# ============================================================
 # 3. 将设置传递给 Python 脚本
-# ============================================================
 
 env = os.environ.copy()
 
-# 路径、样品名和输出名称
+## 路径、样品名和输出名称
 env["GMM_EXCEL_PATH"] = str(excel_path)
 env["GMM_OUT_DIR"] = str(output_dir)
 env["GMM_SAMPLE_A"] = sample_a.strip()
 env["GMM_SAMPLE_B"] = sample_b.strip()
 env["GMM_FNAME"] = output_name.strip()
 
-# bootstrap 和并行设置
+## bootstrap 和并行设置
 env["GMM_N_BOOTSTRAP"] = str(n_bootstrap)
 env["GMM_N_JOBS"] = str(n_jobs)
 env["GMM_N_INIT"] = str(gmm_n_init)
 
-# 每个并行进程内部只使用一个底层计算线程
+## 每个并行进程内部只使用一个底层计算线程
 env["OMP_NUM_THREADS"] = "1"
 env["MKL_NUM_THREADS"] = "1"
 env["OPENBLAS_NUM_THREADS"] = "1"
@@ -139,13 +133,11 @@ env["NUMEXPR_NUM_THREADS"] = "1"
 env["VECLIB_MAXIMUM_THREADS"] = "1"
 env["BLIS_NUM_THREADS"] = "1"
 
-# 防止服务器上图形窗口阻塞
+## 防止服务器上图形窗口阻塞
 env["MPLBACKEND"] = "Agg"
 
 
-# ============================================================
 # 4. 显示本次运行设置
-# ============================================================
 
 print("本次运行设置")
 print("-" * 60)
@@ -162,9 +154,7 @@ print("GMM n_init：", gmm_n_init)
 print("-" * 60)
 
 
-# ============================================================
 # 5. 运行完整脚本
-# ============================================================
 
 result = subprocess.run(
     [sys.executable, str(script_path)],
